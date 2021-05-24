@@ -1,6 +1,20 @@
 #include "lcd.h"
 
-unsigned char sec0, sec1;
+unsigned char seed = 0;
+unsigned char state = 0;
+
+
+void startLcd() {
+	unsigned char ScreenBuffer[8][128];
+	InitScreenBuffer(ScreenBuffer);
+
+	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
+	GLCD_Line(ScreenBuffer, 58, 38, 58, 127);
+	display_string(0, 0, "Score");
+	display_string(1, 0, "000");
+	display_string(3, 0, "Speed");
+	display_string(4, 0, "000");
+}
 
 int main(void)
 {
@@ -16,7 +30,7 @@ int main(void)
 	cmd_lr( 0x40 );
 		
 	lcd_clear();
-	display_string(0, 0, "Clock Interrupt Test");
+	startLcd();
 		
 	TCNT1H = 0xB;
 	TCNT1L = 0xDC;
@@ -25,24 +39,25 @@ int main(void)
 		
 	TIMSK = (1<<TOIE1);
 	sei();
-		
-
-	sec1 = 0;
-	sec0 = 0;
 
 	while(1) {
-		display_char(1, 3, sec1+0x30);
-		display_char(1, 4, sec0+0x30);
 	}
 }
 
-ISR(TIMER1_OVF_vect){
-	sec0++;
-	if(sec0 == 10){
-		sec0 = 0;
-		sec1++;
-		if(sec1 == 6){
-			sec1 = 0;
-		}
+ISR (TIMER1_OVF_vect) {
+	seed++;
+	if(seed == 10) {
+		seed = 0;
 	}
 }
+
+/*
+ISR (INT0_vect) {
+	if (state == 0) {
+		state = 1;
+	}
+	else {
+		state = 0;
+	}
+}
+*/
