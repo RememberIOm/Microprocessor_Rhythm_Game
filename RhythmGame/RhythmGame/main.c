@@ -14,6 +14,12 @@ void startLcd() {
 	display_string(1, 0, "000");
 	display_string(3, 0, "Speed");
 	display_string(4, 0, "000");
+	display_string(0, 7, "1 - START");
+	display_string(1, 7, "2 - RESET");
+	display_string(2, 7, "3 - LANE 1");
+	display_string(3, 7, "4 - LANE 2");
+	display_string(4, 7, "5 - LANE 3");
+	display_string(5, 7, "6 - LANE 4");
 }
 
 int main(void)
