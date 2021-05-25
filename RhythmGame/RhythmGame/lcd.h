@@ -340,12 +340,16 @@ unsigned char font[95][5] = {            /* 5x7 ASCII character font */
 
 	void GLCD_Rectangle(unsigned char ScreenBuffer[8][128],unsigned char x1,unsigned char y1,unsigned char x2,unsigned char y2)
 	{
-		//Fill your code here
-		
+		GLCD_Line(ScreenBuffer, x1, y1, x1, y2);
+		GLCD_Line(ScreenBuffer, x2, y1, x2, y2);
+		GLCD_Line(ScreenBuffer, x1, y1, x2, y1);
+		GLCD_Line(ScreenBuffer, x1, y2, x2, y2);
 	}
 
 	void GLCD_RectangleBlack(unsigned char ScreenBuffer[8][128],unsigned char x1,unsigned char y1,unsigned char x2,unsigned char y2) {
-		//HW
+		for (char i = x1; i <= x2; ++i) {
+			GLCD_Line(ScreenBuffer, i, y1, i, y2);
+		}
 	}
 
 	void GLCD_Circle(unsigned char ScreenBuffer[8][128],unsigned char x1,unsigned char y1,unsigned char r)
@@ -367,6 +371,17 @@ unsigned char font[95][5] = {            /* 5x7 ASCII character font */
 			GLCD_Dot(ScreenBuffer,x,y);
 			y = y1 - (unsigned char)s;
 			GLCD_Dot(ScreenBuffer,x,y);
+		}
+	}
+	
+	void InitNoteBuffer( unsigned char NoteBuffer[4][64] )
+	{
+		unsigned int i, j;
+		
+		for(i = 0 ; i < 4; i++){
+			for(j = 0 ; j < 64; j++){
+				NoteBuffer[i][j] = 0;
+			}
 		}
 	}
 

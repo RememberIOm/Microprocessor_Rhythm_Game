@@ -9,6 +9,8 @@ unsigned char state = READY;
 unsigned char score = 0, speed = 0;
 
 void startLcd();
+void drawNote(unsigned char[4][64]);
+void fallNote(unsigned char[4][64]);
 
 int main(void)
 {
@@ -26,7 +28,7 @@ int main(void)
 	TCNT1H = 0xB;
 	TCNT1L = 0xDC;
 	TCCR1A = 0x0;
-	TCCR1B = 0x04;
+	TCCR1B = 0x01;
 
 	EICRA = 0x66;
 	EICRB = 0x66;
@@ -44,16 +46,34 @@ int main(void)
 			}
 		}
 		else if (state == PLAY) {
+			srand(seed);
+			
+			unsigned char cnt = 0;
+			unsigned char NoteBuffer[4][64];
+			InitNoteBuffer(NoteBuffer);
+			
 			lcd_clear();
-			startLcd();
 			
 			while (state == PLAY) {
-				_delay_us(1);
+				for (char i = 0; i < 100 - speed; ++i) {
+					_delay_us(100);
+				}				
+				
+				if (cnt % 16 == 0) {
+					NoteBuffer[rand() % 4][0] = 1;
+					++speed;
+				}
+				
+				drawNote(NoteBuffer);
+				fallNote(NoteBuffer);
+				
+				++cnt;
 			}
 		}
 		else {
 			while (state == GAMEOVER) {
 				_delay_us(1);
+				// fiil in
 			}
 		}
 	}
@@ -64,7 +84,7 @@ void startLcd() {
 	InitScreenBuffer(ScreenBuffer);
 
 	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
-	GLCD_Line(ScreenBuffer, 58, 38, 58, 127);
+	GLCD_Line(ScreenBuffer, 58, 39, 58, 127);
 	
 	display_string(0, 0, "Score");
 	display_char(1, 0, score / 100 + 0x30);
@@ -86,8 +106,38 @@ void startLcd() {
 	}
 }
 
+void drawNote(unsigned char NoteBuffer[4][64]) {
+	unsigned char ScreenBuffer[8][128];
+	InitScreenBuffer(ScreenBuffer);
+	
+	lcd_clear();
+	startLcd();
+	
+	for (char i = 0; i < 4; ++i) {
+		for (char j = 0; j < 64; ++j) {
+			if (NoteBuffer[i][j]) {
+				GLCD_RectangleBlack(ScreenBuffer, j, i * 22 + 39, j + 4, (i + 1) * 22 + 39);
+			}
+		}
+	}
+}
+
+void fallNote(unsigned char NoteBuffer[4][64]) {
+	for (char i = 0; i < 4; ++i) {
+		for (char j = 64; j > 0; --j) {
+			if (NoteBuffer[i][j - 1]) {
+				NoteBuffer[i][j - 1] = 0;
+				
+				if (j != 64) {
+					NoteBuffer[i][j] = 1;
+				}
+			}
+		}
+	}
+}
+
 ISR (TIMER1_OVF_vect) {
-	seed = TCNT1L;
+	++seed;
 }
 
 // START
