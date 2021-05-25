@@ -1,20 +1,14 @@
 #include "lcd.h"
 
+#define READY 0;
+#define PLAY 1;
+#define GAMEOVER 2;
+
 unsigned char seed = 0;
-unsigned char state = 0;
+unsigned char state = READY;
+unsigned char score = 0, speed = 0;
 
-
-void startLcd() {
-	unsigned char ScreenBuffer[8][128];
-	InitScreenBuffer(ScreenBuffer);
-
-	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
-	GLCD_Line(ScreenBuffer, 58, 38, 58, 127);
-	display_string(0, 0, "Score");
-	display_string(1, 0, "000");
-	display_string(3, 0, "Speed");
-	display_string(4, 0, "000");
-}
+void startLcd();
 
 int main(void)
 {
@@ -30,34 +24,55 @@ int main(void)
 	cmd_lr( 0x40 );
 		
 	lcd_clear();
-	startLcd();
-		
+	
 	TCNT1H = 0xB;
 	TCNT1L = 0xDC;
 	TCCR1A = 0x0;
-	TCCR1B = 0x04;
+	TCCR1B = 0x01;
 		
 	TIMSK = (1<<TOIE1);
+	EIMSK = 0x01;
 	sei();
 
-	while(1) {
+	while (1) {
+		if (state == READY) {
+			lcd_clear();
+			startLcd();
+		}
+		else if (state = PLAY) {
+			
+		}
+		else {
+			
+		}
 	}
+}
+
+void startLcd() {
+	unsigned char ScreenBuffer[8][128];
+	InitScreenBuffer(ScreenBuffer);
+
+	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
+	GLCD_Line(ScreenBuffer, 58, 38, 58, 127);
+	display_string(0, 0, "Score");
+	display_string(1, 0, "000");
+	display_string(3, 0, "Speed");
+	display_string(4, 0, "000");
+	display_string(0, 7, "1 - START");
+	display_string(1, 7, "2 - RESET");
+	display_string(2, 7, "3 - LANE 1");
+	display_string(3, 7, "4 - LANE 2");
+	display_string(4, 7, "5 - LANE 3");
+	display_string(5, 7, "6 - LANE 4");
 }
 
 ISR (TIMER1_OVF_vect) {
 	seed++;
-	if(seed == 10) {
-		seed = 0;
+}
+
+ISR (INT0_vect) {
+	if (state == READY) {
+		state = PLAY;
 	}
 }
 
-/*
-ISR (INT0_vect) {
-	if (state == 0) {
-		state = 1;
-	}
-	else {
-		state = 0;
-	}
-}
-*/
