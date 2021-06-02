@@ -235,8 +235,10 @@ unsigned char font[95][5] = {            /* 5x7 ASCII character font */
 		}
 	}
 
-	void lcd_clear()
+	void lcd_clear(unsigned char ScreenBuffer[8][128])
 	{
+		InitScreenBuffer(ScreenBuffer);
+		
 		unsigned char i, j, x, y;
 		x = 0xB8;                         /* X start address */
 		y = 0x40;                         /* Y start address */
@@ -247,7 +249,6 @@ unsigned char font[95][5] = {            /* 5x7 ASCII character font */
 			data_lr(0x00);           /* clear CS1 and CS2 */
 			x++;
 		}
-		//HW: Clear ScreenBuffer as well
 	}
 
 	void fill_char_xy(unsigned char x_char, unsigned char y, unsigned char data)

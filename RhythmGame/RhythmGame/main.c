@@ -6,7 +6,8 @@
 
 unsigned char seed = 0;
 unsigned char state = READY;
-unsigned char score = 0, speed = 0;
+unsigned char score = 0;
+unsigned long speed = 0;
 unsigned char ScreenBuffer[8][128];
 
 void startLcd();
@@ -42,7 +43,7 @@ int main(void)
 	while (1) {
 		if (state == READY) {
 			TIMSK = (1<<TOIE1);
-			lcd_clear();
+			lcd_clear(ScreenBuffer);
 			startLcd();
 			
 			while (state == READY) {
@@ -63,13 +64,23 @@ int main(void)
 					}
 					
 					NoteBuffer[0] = rand() % 4 + 1;
+					
+					speed += 20;
+					if (speed > 999) {
+						speed = 999;
+					}
 				}
 				
+				lcd_clear(ScreenBuffer);
+				startLcd();
 				drawNote(NoteBuffer, timeSet);
 				
-				++speed;
-				++timeSet;
+				timeSet += 4;
 				timeSet %= 16;
+				
+				for (unsigned long i = 0; i < 1000 - speed; ++i) {
+					_delay_us(100);
+				}
 			}
 		}
 		else {
@@ -83,7 +94,6 @@ int main(void)
 
 void startLcd() {
 	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
-	GLCD_Line(ScreenBuffer, 58, 39, 58, 127);
 	
 	display_string(0, 0, "Score");
 	drawScore();
@@ -108,9 +118,14 @@ void drawScore() {
 }
 
 void drawSpeed() {
-	display_char(4, 0, speed / 100 + 0x30);
-	display_char(4, 1, speed % 100 / 10 + 0x30);
-	display_char(4, 2, speed % 10 + 0x30);
+	if (speed == 999) {
+		display_string(4, 0, "MAX");
+	}
+	else {
+		display_char(4, 0, speed / 100 + 0x30);
+		display_char(4, 1, speed % 100 / 10 + 0x30);
+		display_char(4, 2, speed % 10 + 0x30);
+	}
 }
 
 void drawNote(unsigned char NoteBuffer[4], unsigned char timeSet) {
@@ -119,7 +134,7 @@ void drawNote(unsigned char NoteBuffer[4], unsigned char timeSet) {
 
 	for (char i = 0; i < 4; ++i) {
 		if (NoteBuffer[i] != 0) {
-				GLCD_RectangleBlack(ScreenBuffer, timeSet + 16 * i, (NoteBuffer[i] - 1) * 22 + 39, timeSet + 16 * i + 4, NoteBuffer[i] * 22 + 39);
+				GLCD_Rectangle(ScreenBuffer, timeSet + 16 * i, (NoteBuffer[i] - 1) * 22 + 39, timeSet + 16 * i + 6, NoteBuffer[i] * 22 + 39);
 		}
 	}
 }
