@@ -59,13 +59,17 @@ int main(void)
 			
 			while (state == PLAY) {
 				if (timeSet == 0) {
-					for (char i = 3; i > 0; --i) {
-						NoteBuffer[i] = NoteBuffer[i - 1];
+					if (NoteBuffer[3] != 0) {
+						state = GAMEOVER;
+					}
+					
+					for (unsigned char noteLocation = 3; noteLocation > 0; --noteLocation) {
+						NoteBuffer[noteLocation] = NoteBuffer[noteLocation - 1];
 					}
 					
 					NoteBuffer[0] = rand() % 4 + 1;
 					
-					speed += 20;
+					speed += 10;
 					if (speed > 999) {
 						speed = 999;
 					}
@@ -78,10 +82,60 @@ int main(void)
 				timeSet += 4;
 				timeSet %= 16;
 				
-				for (unsigned long i = 0; i < 1000 - speed; ++i) {
-					_delay_us(100);
+				char lastNote = 0, lastNoteLocation = 0;
+				for (char findNote = 3; findNote >= 0; --findNote) {
+					if (NoteBuffer[findNote] != 0) {
+						lastNote = NoteBuffer[findNote];
+						lastNoteLocation = findNote;
+						break;
+					}
 				}
-			}
+				
+				if (lastNote != 0) {
+					char isClear = 0;
+					
+					if (lastNote == 1) {
+						for (unsigned long timePassed = 0; timePassed < 1000 - speed; ++timePassed) {
+							if (PIND == 0xFB && isClear == 0) {
+								score += 5;
+								NoteBuffer[lastNoteLocation] = 0;
+								isClear = 1;
+							}
+							_delay_us(200);
+						}
+					}
+					else if (lastNote == 2) {
+						for (unsigned long timePassed = 0; timePassed < 1000 - speed; ++timePassed) {
+							if (PIND == 0xF7 && isClear == 0) {
+								score += 5;
+								NoteBuffer[lastNoteLocation] = 0;
+								isClear = 1;
+							}
+							_delay_us(200);
+						}
+					}
+					else if (lastNote == 3) {
+						for (unsigned long timePassed = 0; timePassed < 1000 - speed; ++timePassed) {
+							if (PIND == 0xEF && isClear == 0) {
+								score += 5;
+								NoteBuffer[lastNoteLocation] = 0;
+								isClear = 1;
+							}
+							_delay_us(200);
+						}
+					}
+					else if (lastNote == 4) {
+						for (unsigned long timePassed = 0; timePassed < 1000 - speed; ++timePassed) {
+							if (PIND == 0xDF && isClear == 0) {
+								score += 5;
+								NoteBuffer[lastNoteLocation] = 0;
+								isClear = 1;
+							}
+							_delay_us(200);
+						}
+					} // else if
+				} // if (lastNote != 0)
+			} // while (state == PLAY)
 		}
 		else {
 			while (state == GAMEOVER) {
