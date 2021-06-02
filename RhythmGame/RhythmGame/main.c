@@ -6,8 +6,7 @@
 
 unsigned char seed = 0;
 unsigned char state = READY;
-unsigned char score = 0;
-unsigned long speed = 0;
+unsigned long score = 0, speed = 0, highScore = 0;
 unsigned char ScreenBuffer[8][128];
 
 void startLcd();
@@ -60,6 +59,9 @@ int main(void)
 			while (state == PLAY) {
 				if (timeSet == 0) {
 					if (NoteBuffer[3] != 0) {
+						if (highScore < score) {
+							highScore = score;
+						}
 						state = GAMEOVER;
 					}
 					
@@ -82,17 +84,17 @@ int main(void)
 				timeSet += 4;
 				timeSet %= 16;
 				
-				char lastNote = 0, lastNoteLocation = 0;
-				for (char findNote = 3; findNote >= 0; --findNote) {
-					if (NoteBuffer[findNote] != 0) {
-						lastNote = NoteBuffer[findNote];
-						lastNoteLocation = findNote;
+				unsigned char lastNote = 0, lastNoteLocation = 0;
+				for (char findNote = 4; findNote > 0; --findNote) {
+					if (NoteBuffer[findNote - 1] != 0) {
+						lastNote = NoteBuffer[findNote - 1];
+						lastNoteLocation = findNote - 1;
 						break;
 					}
 				}
 				
 				if (lastNote != 0) {
-					char isClear = 0;
+					unsigned char isClear = 0;
 					
 					if (lastNote == 1) {
 						for (unsigned long timePassed = 0; timePassed < 1000 - speed; ++timePassed) {
@@ -155,6 +157,9 @@ void startLcd() {
 	display_string(3, 0, "Speed");
 	drawSpeed();
 	
+	display_string(6, 0, "H.S");
+	drawHighScore();
+	
 	if (state == READY) {
 		display_string(0, 7, "1 - START");
 		display_string(1, 7, "2 - RESET");
@@ -180,6 +185,12 @@ void drawSpeed() {
 		display_char(4, 1, speed % 100 / 10 + 0x30);
 		display_char(4, 2, speed % 10 + 0x30);
 	}
+}
+
+void drawHighScore() {
+	display_char(7, 0, highScore / 100 + 0x30);
+	display_char(7, 1, highScore % 100 / 10 + 0x30);
+	display_char(7, 2, highScore % 10 + 0x30);
 }
 
 void drawNote(unsigned char NoteBuffer[4], unsigned char timeSet) {
@@ -210,5 +221,7 @@ ISR (INT0_vect) {
 ISR (INT1_vect) {
 	if (state == GAMEOVER) {
 		state = READY;
+		score = 0;
+		speed = 0;
 	}
 }
