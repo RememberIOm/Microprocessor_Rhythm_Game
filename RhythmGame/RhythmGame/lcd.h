@@ -374,14 +374,10 @@ unsigned char font[95][5] = {            /* 5x7 ASCII character font */
 		}
 	}
 	
-	void InitNoteBuffer( unsigned char NoteBuffer[4][64] )
+	void InitNoteBuffer( unsigned char NoteBuffer[4] )
 	{
-		unsigned int i, j;
-		
-		for(i = 0 ; i < 4; i++){
-			for(j = 0 ; j < 64; j++){
-				NoteBuffer[i][j] = 0;
-			}
+		for(char i = 0 ; i < 4; i++){
+			NoteBuffer[i] = 0;
 		}
 	}
 
