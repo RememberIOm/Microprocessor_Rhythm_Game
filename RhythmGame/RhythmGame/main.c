@@ -6,11 +6,14 @@
 
 unsigned char seed = 0;
 unsigned char state = READY;
-unsigned char score = 0, speed = 0;
+unsigned char score = 0;
+unsigned long speed = 0;
+unsigned char ScreenBuffer[8][128];
 
 void startLcd();
-void drawNote(unsigned char[4][64]);
-void fallNote(unsigned char[4][64]);
+void drawScore();
+void drawSpeed();
+void drawNote(unsigned char[4], unsigned char);
 
 int main(void)
 {
@@ -35,10 +38,12 @@ int main(void)
 	EIMSK = 0x03;
 	sei();
 
+	InitScreenBuffer(ScreenBuffer);
+
 	while (1) {
 		if (state == READY) {
 			TIMSK = (1<<TOIE1);
-			lcd_clear();
+			lcd_clear(ScreenBuffer);
 			startLcd();
 			
 			while (state == READY) {
@@ -46,55 +51,55 @@ int main(void)
 			}
 		}
 		else if (state == PLAY) {
+			unsigned char timeSet = 0;
 			srand(seed);
 			
-			unsigned char cnt = 0;
-			unsigned char NoteBuffer[4][64];
+			unsigned char NoteBuffer[4];
 			InitNoteBuffer(NoteBuffer);
 			
-			lcd_clear();
-			
 			while (state == PLAY) {
-				for (char i = 0; i < 100 - speed; ++i) {
-					_delay_us(100);
-				}				
-				
-				if (cnt % 16 == 0) {
-					NoteBuffer[rand() % 4][0] = 1;
-					++speed;
+				if (timeSet == 0) {
+					for (char i = 3; i > 0; --i) {
+						NoteBuffer[i] = NoteBuffer[i - 1];
+					}
+					
+					NoteBuffer[0] = rand() % 4 + 1;
+					
+					speed += 20;
+					if (speed > 999) {
+						speed = 999;
+					}
 				}
 				
-				drawNote(NoteBuffer);
-				fallNote(NoteBuffer);
+				lcd_clear(ScreenBuffer);
+				startLcd();
+				drawNote(NoteBuffer, timeSet);
 				
-				++cnt;
+				timeSet += 4;
+				timeSet %= 16;
+				
+				for (unsigned long i = 0; i < 1000 - speed; ++i) {
+					_delay_us(100);
+				}
 			}
 		}
 		else {
 			while (state == GAMEOVER) {
 				_delay_us(1);
-				// fiil in
+				// fill in
 			}
 		}
 	}
 }
 
 void startLcd() {
-	unsigned char ScreenBuffer[8][128];
-	InitScreenBuffer(ScreenBuffer);
-
 	GLCD_Line(ScreenBuffer, 0, 38, 63, 38);
-	GLCD_Line(ScreenBuffer, 58, 39, 58, 127);
 	
 	display_string(0, 0, "Score");
-	display_char(1, 0, score / 100 + 0x30);
-	display_char(1, 1, score % 100 / 10 + 0x30);
-	display_char(1, 2, score % 10 + 0x30);
+	drawScore();
 	
 	display_string(3, 0, "Speed");
-	display_char(4, 0, speed / 100 + 0x30);
-	display_char(4, 1, speed % 100 / 10 + 0x30);
-	display_char(4, 2, speed % 10 + 0x30);
+	drawSpeed();
 	
 	if (state == READY) {
 		display_string(0, 7, "1 - START");
@@ -106,32 +111,30 @@ void startLcd() {
 	}
 }
 
-void drawNote(unsigned char NoteBuffer[4][64]) {
-	unsigned char ScreenBuffer[8][128];
-	InitScreenBuffer(ScreenBuffer);
-	
-	lcd_clear();
-	startLcd();
-	
-	for (char i = 0; i < 4; ++i) {
-		for (char j = 0; j < 64; ++j) {
-			if (NoteBuffer[i][j]) {
-				GLCD_RectangleBlack(ScreenBuffer, j, i * 22 + 39, j + 4, (i + 1) * 22 + 39);
-			}
-		}
+void drawScore() {
+	display_char(1, 0, score / 100 + 0x30);
+	display_char(1, 1, score % 100 / 10 + 0x30);
+	display_char(1, 2, score % 10 + 0x30);
+}
+
+void drawSpeed() {
+	if (speed == 999) {
+		display_string(4, 0, "MAX");
+	}
+	else {
+		display_char(4, 0, speed / 100 + 0x30);
+		display_char(4, 1, speed % 100 / 10 + 0x30);
+		display_char(4, 2, speed % 10 + 0x30);
 	}
 }
 
-void fallNote(unsigned char NoteBuffer[4][64]) {
+void drawNote(unsigned char NoteBuffer[4], unsigned char timeSet) {
+	drawScore();
+	drawSpeed();
+
 	for (char i = 0; i < 4; ++i) {
-		for (char j = 64; j > 0; --j) {
-			if (NoteBuffer[i][j - 1]) {
-				NoteBuffer[i][j - 1] = 0;
-				
-				if (j != 64) {
-					NoteBuffer[i][j] = 1;
-				}
-			}
+		if (NoteBuffer[i] != 0) {
+				GLCD_Rectangle(ScreenBuffer, timeSet + 16 * i, (NoteBuffer[i] - 1) * 22 + 39, timeSet + 16 * i + 6, NoteBuffer[i] * 22 + 39);
 		}
 	}
 }
